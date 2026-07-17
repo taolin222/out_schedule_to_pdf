@@ -6,7 +6,7 @@ import '../models/study_plan.dart';
 
 class PdfGenerator {
   static const _fontSize = 9.0;
-  static const _headerFontSize = 14.0;
+  static const _headerFontSize = 16.0;
   static const _infoFontSize = 10.0;
 
   static Future<Uint8List> generatePdf(StudyPlan plan) async {
@@ -337,7 +337,7 @@ class PdfGenerator {
       children: [
         pw.Container(
           padding: const pw.EdgeInsets.symmetric(vertical: 6, horizontal: 4),
-          alignment: pw.Alignment.centerLeft,
+          alignment: pw.Alignment.center,
           child: pw.Text(
             '总结及心得：',
             style: pw.TextStyle(font: font, fontSize: _fontSize),
