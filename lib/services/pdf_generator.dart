@@ -51,9 +51,7 @@ class PdfGenerator {
   }
 
   static pw.Widget _buildHeader(StudyPlan plan, pw.Font font) {
-    final examText = plan.daysUntilExam == 0
-        ? '今天考试'
-        : '距考试还有 ${plan.daysUntilExam} 天';
+    final examText = '距考试还有 ${plan.daysUntilExam} 天';
     return pw.Column(crossAxisAlignment: pw.CrossAxisAlignment.center, children: [
       pw.Center(
           child: pw.Text('模块学习',
