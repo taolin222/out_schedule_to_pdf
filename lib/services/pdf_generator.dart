@@ -5,9 +5,9 @@ import 'package:flutter/services.dart' show rootBundle;
 import '../models/study_plan.dart';
 
 class PdfGenerator {
-  static const _fontSize = 9.0;
-  static const _headerFontSize = 16.0;
-  static const _infoFontSize = 10.0;
+  static const _fontSize = 12.0;
+  static const _headerFontSize = 14.0;
+  static const _infoFontSize = 14.0;
 
   /// 固定模块定义：名称 → 行数
   /// 资料分析特殊处理（拆为"资料"/"分析"两行）
@@ -87,14 +87,14 @@ class PdfGenerator {
 
   static pw.Widget _cell(String text, pw.Font font, {bool isHeader = false}) {
     return pw.Container(
-      padding: const pw.EdgeInsets.symmetric(vertical: 4, horizontal: 4),
+      padding: const pw.EdgeInsets.symmetric(vertical: 5, horizontal: 6),
       alignment: pw.Alignment.center,
       child: pw.Text(
         text,
         style: pw.TextStyle(
           font: font,
           fontSize: _fontSize,
-          fontWeight: isHeader ? pw.FontWeight.bold : null,
+          fontWeight: pw.FontWeight.bold,
         ),
         textAlign: pw.TextAlign.center,
       ),
@@ -200,11 +200,11 @@ class PdfGenerator {
     return pw.Table(
       border: pw.TableBorder.all(color: PdfColors.black, width: 0.5),
       columnWidths: {
-        0: const pw.FlexColumnWidth(2.5),
-        1: const pw.FlexColumnWidth(1),
-        2: const pw.FlexColumnWidth(1),
-        3: const pw.FlexColumnWidth(1),
-        4: const pw.FlexColumnWidth(1),
+        0: const pw.FlexColumnWidth(5.6),
+        1: const pw.FlexColumnWidth(1.0),
+        2: const pw.FlexColumnWidth(1.8),
+        3: const pw.FlexColumnWidth(1.8),
+        4: const pw.FlexColumnWidth(1.5),
       },
       children: rows,
     );
