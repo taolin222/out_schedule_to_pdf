@@ -50,7 +50,7 @@ class DatePickerField extends StatelessWidget {
       firstDate: firstDate ?? DateTime(2020),
       lastDate: lastDate ?? DateTime(2030),
     );
-    if (picked != null) {
+    if (picked != null && context.mounted) {
       onDateSelected(picked);
     }
   }

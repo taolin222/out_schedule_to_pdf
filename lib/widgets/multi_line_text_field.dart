@@ -23,6 +23,7 @@ class MultiLineTextField extends StatelessWidget {
           const SizedBox(height: 4),
           TextField(
             controller: controller,
+            minLines: 5,
             maxLines: 5,
             decoration: InputDecoration(
               hintText: hintText,
