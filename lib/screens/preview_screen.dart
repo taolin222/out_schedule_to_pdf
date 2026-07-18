@@ -30,6 +30,8 @@ class PreviewScreen extends StatelessWidget {
         build: (format) => _pdfData(),
         initialPageFormat: PdfPageFormat.a4,
         canChangePageFormat: false,
+        canChangeOrientation: false,
+        canDebug: false,
       ),
     );
   }

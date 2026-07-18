@@ -9,6 +9,25 @@ class PdfGenerator {
   static const _headerFontSize = 16.0;
   static const _infoFontSize = 10.0;
 
+  /// 固定模块定义：名称 → 行数
+  /// 资料分析特殊处理（拆为"资料"/"分析"两行）
+  static const _fixedSections = {
+    '数量': 2,
+    '资料分析': -2, // 负号表示拆分为 "资料" "分析"
+    '政治理论': 1,
+    '常识': 1,
+  };
+
+  /// 申论子项目定义：[列, 文本]（列0=第一列 申论, 列1=第二列 子类, 列2=第三列 子项）
+  static const _shenlunItems = [
+    [0, '申论'],
+    [1, '小题'],
+    [2, '概括题'],
+    [2, '分析题'],
+    [2, '贯彻执行'],
+    [1, '大作文'],
+  ];
+
   static Future<Uint8List> generatePdf(StudyPlan plan) async {
     final pdf = pw.Document();
 
@@ -16,8 +35,6 @@ class PdfGenerator {
     final fontData =
         await rootBundle.load('assets/fonts/NotoSansSC-Variable.ttf');
     final font = pw.Font.ttf(fontData);
-    // Use same variable font for bold — the pdf package handles weight from TextStyle
-    final fontBold = font;
 
     pdf.addPage(
       pw.MultiPage(
@@ -28,7 +45,7 @@ class PdfGenerator {
           marginRight: 25,
         ),
         build: (context) => [
-          _buildHeader(plan, font, fontBold),
+          _buildHeader(plan, font),
           pw.SizedBox(height: 8),
           _buildTable(plan, font),
         ],
@@ -38,11 +55,7 @@ class PdfGenerator {
     return pdf.save();
   }
 
-  static pw.Widget _buildHeader(
-    StudyPlan plan,
-    pw.Font font,
-    pw.Font fontBold,
-  ) {
+  static pw.Widget _buildHeader(StudyPlan plan, pw.Font font) {
     final examText = plan.daysUntilExam == 0
         ? '今天考试'
         : '距考试还有 ${plan.daysUntilExam} 天';
@@ -54,8 +67,9 @@ class PdfGenerator {
           child: pw.Text(
             '模块学习',
             style: pw.TextStyle(
-              font: fontBold,
+              font: font,
               fontSize: _headerFontSize,
+              fontWeight: pw.FontWeight.bold,
             ),
           ),
         ),
@@ -71,81 +85,7 @@ class PdfGenerator {
     );
   }
 
-  static pw.Widget _buildTable(StudyPlan plan, pw.Font font) {
-    final verbalItems = plan.verbalItemList;
-    final reasoningItems = plan.reasoningItemList;
-
-    // Build table rows
-    final rows = <pw.TableRow>[];
-
-    // Header row
-    rows.add(_headerRow(font));
-
-    // 言语 section (dynamic rows based on verbalItems)
-    if (verbalItems.isEmpty) {
-      rows.add(_categoryRow('言语', font));
-    } else {
-      rows.addAll(_dynamicSectionRows('言语', verbalItems, font));
-    }
-
-    // 判断推理 section (dynamic rows based on reasoningItems)
-    if (reasoningItems.isEmpty) {
-      rows.add(_categoryRow('判断推理', font));
-    } else {
-      rows.addAll(_dynamicSectionRows('判断推理', reasoningItems, font));
-    }
-
-    // 数量 section (fixed, 2 rows)
-    rows.addAll(_fixedSectionRows('数量', 2, font));
-
-    // 资料分析 section (fixed, 2 rows)
-    rows.addAll(_fixedSectionRows('资料分析', 2, font));
-
-    // 政治理论 section (fixed, 1 row)
-    rows.addAll(_fixedSectionRows('政治理论', 1, font));
-
-    // 常识 section (fixed, 1 row)
-    rows.addAll(_fixedSectionRows('常识', 1, font));
-
-    // 申论 section (fixed, with sub-items)
-    rows.addAll(_shenlunRows(font));
-
-    // 总结及心得 row
-    rows.add(_summaryRow(font));
-
-    return pw.Table(
-      border: pw.TableBorder.all(
-        color: PdfColors.black,
-        width: 0.5,
-      ),
-      columnWidths: {
-        0: const pw.FlexColumnWidth(2.5),
-        1: const pw.FlexColumnWidth(1),
-        2: const pw.FlexColumnWidth(1),
-        3: const pw.FlexColumnWidth(1),
-        4: const pw.FlexColumnWidth(1),
-      },
-      children: rows,
-    );
-  }
-
-  static pw.TableRow _headerRow(pw.Font font) {
-    return pw.TableRow(
-      children: [
-        _cell('任务', font, isHeader: true),
-        _cell('完成', font, isHeader: true),
-        _cell('做题时间', font, isHeader: true),
-        _cell('复盘时间', font, isHeader: true),
-        _cell('总用时', font, isHeader: true),
-      ],
-    );
-  }
-
-  static pw.Widget _cell(
-    String text,
-    pw.Font font, {
-    bool isHeader = false,
-  }) {
+  static pw.Widget _cell(String text, pw.Font font, {bool isHeader = false}) {
     return pw.Container(
       padding: const pw.EdgeInsets.symmetric(vertical: 4, horizontal: 4),
       alignment: pw.Alignment.center,
@@ -161,176 +101,55 @@ class PdfGenerator {
     );
   }
 
-  static pw.Widget _emptyCell(pw.Font font) {
-    return _cell('', font);
-  }
+  static pw.Container _emptyCell(pw.Font font) =>
+      pw.Container(padding: const pw.EdgeInsets.symmetric(vertical: 4, horizontal: 4));
 
-  /// Creates a simple category row (for single-row sections).
-  static pw.TableRow _categoryRow(
-    String category,
-    pw.Font font,
-  ) {
+  /// 创建一行 5 列表格
+  static pw.TableRow _row5(List<String> texts, pw.Font font,
+      {bool allBold = false}) {
     return pw.TableRow(
-      children: [
-        _cell(category, font),
-        _emptyCell(font),
-        _emptyCell(font),
-        _emptyCell(font),
-        _emptyCell(font),
-      ],
+      children: texts
+          .map((t) => t.isNotEmpty
+              ? _cell(t, font, isHeader: allBold)
+              : _emptyCell(font))
+          .toList(),
     );
   }
 
-  /// 动态模块行：分类名称跨行合并 + 每行一个子项
+  static pw.TableRow _headerRow(pw.Font font) =>
+      _row5(['任务', '完成', '做题时间', '复盘时间', '总用时'], font, allBold: true);
+
+  /// 动态模块行：分类 + N 个子项
   static List<pw.TableRow> _dynamicSectionRows(
-    String category,
-    List<String> items,
-    pw.Font font,
-  ) {
-    final rows = <pw.TableRow>[];
-    for (int i = 0; i < items.length; i++) {
-      final isFirst = i == 0;
-      rows.add(pw.TableRow(
-        children: [
-          if (isFirst)
-            _cell(category, font)
-          else
-            _emptyCell(font),
-          _cell(items[i], font),
-          _emptyCell(font),
-          _emptyCell(font),
-          _emptyCell(font),
-        ],
-      ));
-    }
-    return rows;
+      String category, List<String> items, pw.Font font) {
+    return items.asMap().entries.map((e) {
+      final cells = <String>['', e.value, '', '', ''];
+      if (e.key == 0) cells[0] = category;
+      return _row5(cells, font);
+    }).toList();
   }
 
-  /// 固定模块行：分类名称跨行合并，剩余单元格留空
+  /// 固定模块行（数据驱动，替代原 _fixedSectionRows + _shenlunRows）
   static List<pw.TableRow> _fixedSectionRows(
-    String category,
-    int rowCount,
-    pw.Font font,
-  ) {
-    // 资料分析 is split into 资料/分析 across 2 rows
-    if (category == '资料分析' && rowCount == 2) {
+      String category, int rowCount, pw.Font font) {
+    if (rowCount == -2) {
+      // 资料分析：拆为资料/分析两行
       return [
-        pw.TableRow(children: [
-          _cell('资料', font),
-          _emptyCell(font),
-          _emptyCell(font),
-          _emptyCell(font),
-          _emptyCell(font),
-        ]),
-        pw.TableRow(children: [
-          _cell('分析', font),
-          _emptyCell(font),
-          _emptyCell(font),
-          _emptyCell(font),
-          _emptyCell(font),
-        ]),
+        _row5(['资料', '', '', '', ''], font),
+        _row5(['分析', '', '', '', ''], font),
       ];
     }
-
-    if (category == '政治理论' && rowCount == 1) {
-      return [
-        pw.TableRow(children: [
-          _cell('政治理论', font),
-          _emptyCell(font),
-          _emptyCell(font),
-          _emptyCell(font),
-          _emptyCell(font),
-        ]),
-      ];
-    }
-
-    if (category == '常识' && rowCount == 1) {
-      return [
-        pw.TableRow(children: [
-          _cell('常识', font),
-          _emptyCell(font),
-          _emptyCell(font),
-          _emptyCell(font),
-          _emptyCell(font),
-        ]),
-      ];
-    }
-
-    if (category == '数量' && rowCount == 2) {
-      return [
-        pw.TableRow(children: [
-          _cell('数量', font),
-          _emptyCell(font),
-          _emptyCell(font),
-          _emptyCell(font),
-          _emptyCell(font),
-        ]),
-        pw.TableRow(children: [
-          _emptyCell(font),
-          _emptyCell(font),
-          _emptyCell(font),
-          _emptyCell(font),
-          _emptyCell(font),
-        ]),
-      ];
-    }
-
-    // Fallback
     return List.generate(rowCount, (i) {
-      return pw.TableRow(children: [
-        i == 0 ? _cell(category, font) : _emptyCell(font),
-        _emptyCell(font),
-        _emptyCell(font),
-        _emptyCell(font),
-        _emptyCell(font),
-      ]);
+      return _row5([i == 0 ? category : '', '', '', '', ''], font);
     });
   }
 
-  /// 申论固定行（小题→概括题/分析题/贯彻执行，大作文）
   static List<pw.TableRow> _shenlunRows(pw.Font font) {
-    return [
-      // 申论 → 小题
-      pw.TableRow(children: [
-        _cell('申论', font),
-        _cell('小题', font),
-        _emptyCell(font),
-        _emptyCell(font),
-        _emptyCell(font),
-      ]),
-      // 概括题
-      pw.TableRow(children: [
-        _emptyCell(font),
-        _emptyCell(font),
-        _cell('概括题', font),
-        _emptyCell(font),
-        _emptyCell(font),
-      ]),
-      // 分析题
-      pw.TableRow(children: [
-        _emptyCell(font),
-        _emptyCell(font),
-        _cell('分析题', font),
-        _emptyCell(font),
-        _emptyCell(font),
-      ]),
-      // 贯彻执行
-      pw.TableRow(children: [
-        _emptyCell(font),
-        _emptyCell(font),
-        _cell('贯彻执行', font),
-        _emptyCell(font),
-        _emptyCell(font),
-      ]),
-      // 大作文
-      pw.TableRow(children: [
-        _emptyCell(font),
-        _cell('大作文', font),
-        _emptyCell(font),
-        _emptyCell(font),
-        _emptyCell(font),
-      ]),
-    ];
+    return _shenlunItems.map((item) {
+      final cells = ['', '', '', '', ''];
+      cells[item[0] as int] = item[1] as String;
+      return _row5(cells, font);
+    }).toList();
   }
 
   static pw.TableRow _summaryRow(pw.Font font) {
@@ -339,16 +158,55 @@ class PdfGenerator {
         pw.Container(
           padding: const pw.EdgeInsets.symmetric(vertical: 6, horizontal: 4),
           alignment: pw.Alignment.center,
-          child: pw.Text(
-            '总结及心得：',
-            style: pw.TextStyle(font: font, fontSize: _fontSize),
-          ),
+          child: pw.Text('总结及心得：',
+              style: pw.TextStyle(font: font, fontSize: _fontSize)),
         ),
         _emptyCell(font),
         _emptyCell(font),
         _emptyCell(font),
         _emptyCell(font),
       ],
+    );
+  }
+
+  static pw.Widget _buildTable(StudyPlan plan, pw.Font font) {
+    final rows = <pw.TableRow>[];
+
+    rows.add(_headerRow(font));
+
+    // 动态模块：言语
+    final verbalItems = plan.verbalItemList;
+    rows.addAll(verbalItems.isEmpty
+        ? _fixedSectionRows('言语', 1, font)
+        : _dynamicSectionRows('言语', verbalItems, font));
+
+    // 动态模块：判断推理
+    final reasoningItems = plan.reasoningItemList;
+    rows.addAll(reasoningItems.isEmpty
+        ? _fixedSectionRows('判断推理', 1, font)
+        : _dynamicSectionRows('判断推理', reasoningItems, font));
+
+    // 固定模块（数据驱动）
+    for (final entry in _fixedSections.entries) {
+      rows.addAll(_fixedSectionRows(entry.key, entry.value, font));
+    }
+
+    // 申论
+    rows.addAll(_shenlunRows(font));
+
+    // 总结
+    rows.add(_summaryRow(font));
+
+    return pw.Table(
+      border: pw.TableBorder.all(color: PdfColors.black, width: 0.5),
+      columnWidths: {
+        0: const pw.FlexColumnWidth(2.5),
+        1: const pw.FlexColumnWidth(1),
+        2: const pw.FlexColumnWidth(1),
+        3: const pw.FlexColumnWidth(1),
+        4: const pw.FlexColumnWidth(1),
+      },
+      children: rows,
     );
   }
 }
