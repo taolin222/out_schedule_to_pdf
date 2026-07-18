@@ -12,13 +12,12 @@ class PdfGenerator {
   static Future<Uint8List> generatePdf(StudyPlan plan) async {
     final pdf = pw.Document();
 
-    // Load font
+    // Load font (variable font supports all weights)
     final fontData =
-        await rootBundle.load('assets/fonts/NotoSansSC-Regular.ttf');
-    final fontBoldData =
-        await rootBundle.load('assets/fonts/NotoSansSC-Bold.ttf');
+        await rootBundle.load('assets/fonts/NotoSansSC-Variable.ttf');
     final font = pw.Font.ttf(fontData);
-    final fontBold = pw.Font.ttf(fontBoldData);
+    // Use same variable font for bold — the pdf package handles weight from TextStyle
+    final fontBold = font;
 
     pdf.addPage(
       pw.MultiPage(
