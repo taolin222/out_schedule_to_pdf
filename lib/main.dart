@@ -12,7 +12,7 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: '模块学习计划生成器',
+      title: '2027上岸',
       locale: const Locale('zh'),
       supportedLocales: const [Locale('zh')],
       localizationsDelegates: const [
