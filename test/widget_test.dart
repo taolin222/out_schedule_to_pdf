@@ -4,11 +4,16 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:out_schedule_to_pdf/main.dart';
 
 void main() {
-  testWidgets('App renders input form', (WidgetTester tester) async {
+  testWidgets('App shows splash then transitions to input form',
+      (WidgetTester tester) async {
     SharedPreferences.setMockInitialValues({});
     await tester.pumpWidget(const MyApp());
 
-    // Verify header and section titles
+    // Wait for splash screen's 1.5s delay + navigation
+    await tester.pump(const Duration(seconds: 2));
+    await tester.pump(const Duration(seconds: 1));
+
+    // Verify header and section titles on input screen
     expect(find.text('学习计划'), findsOneWidget);
     expect(find.text('日期设置'), findsOneWidget);
     expect(find.text('学习内容'), findsOneWidget);

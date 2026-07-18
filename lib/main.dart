@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
-import 'screens/input_screen.dart';
+import 'screens/splash_screen.dart';
 
 void main() {
   runApp(const MyApp());
@@ -63,7 +63,7 @@ class MyApp extends StatelessWidget {
           ),
         ),
       ),
-      home: const InputScreen(),
+      home: const SplashScreen(),
       debugShowCheckedModeBanner: false,
     );
   }

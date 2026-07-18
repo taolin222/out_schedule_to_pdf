@@ -83,9 +83,10 @@ class _InputScreenState extends State<InputScreen> {
     final theme = Theme.of(context);
     return Scaffold(
       body: SafeArea(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.all(20),
-          child: Column(
+        child: Scrollbar(
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.all(20),
+            child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               const SizedBox(height: 12),
@@ -163,14 +164,12 @@ class _InputScreenState extends State<InputScreen> {
                       const SizedBox(height: 16),
                       MultiLineTextField(
                         label: '言语',
-                        badge: '行测',
                         controller: _verbalController,
                         hintText: '每行输入一个子项目',
                       ),
                       const SizedBox(height: 20),
                       MultiLineTextField(
                         label: '判断推理',
-                        badge: '行测',
                         controller: _reasoningController,
                         hintText: '每行输入一个子项目',
                       ),
@@ -209,7 +208,8 @@ class _InputScreenState extends State<InputScreen> {
           ),
         ),
       ),
-    );
+    ),
+  );
   }
 
   Widget _sectionHeader(ThemeData theme, IconData icon, String title) {
