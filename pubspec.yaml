@@ -49,11 +49,11 @@ dev_dependencies:
 flutter_launcher_icons:
   ios: true
   remove_alpha_ios: true
-  image_path: "assets/icons/app_icon.png"
+  image_path: "assets/icons/mike_picture.png"
 
 flutter_native_splash:
-  color: "#4F46E5"
-  image: assets/image/735375d534650549f4c7f8bde023a657.jpg
+  color: "#FFFFFF"
+  image: assets/icons/mike_picture.png
   android: false
   ios: true
   fullscreen: true
