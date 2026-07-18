@@ -44,6 +44,10 @@ class PdfGenerator {
     pw.Font font,
     pw.Font fontBold,
   ) {
+    final examText = plan.daysUntilExam == 0
+        ? '今天考试'
+        : '距考试还有 ${plan.daysUntilExam} 天';
+
     return pw.Column(
       crossAxisAlignment: pw.CrossAxisAlignment.center,
       children: [
@@ -60,7 +64,7 @@ class PdfGenerator {
         pw.Center(
           child: pw.Text(
             '${plan.planDate.year}年 ${plan.planDate.month}月 ${plan.planDate.day}日 ${plan.weekdayChinese}'
-            '    学习时长：________ 距考试还有 ${plan.daysUntilExam} 天',
+            '    学习时长：________ $examText',
             style: pw.TextStyle(font: font, fontSize: _infoFontSize),
           ),
         ),
@@ -80,14 +84,14 @@ class PdfGenerator {
 
     // 言语 section (dynamic rows based on verbalItems)
     if (verbalItems.isEmpty) {
-      rows.add(_categoryRow('言语', font, rowSpan: 1));
+      rows.add(_categoryRow('言语', font));
     } else {
       rows.addAll(_dynamicSectionRows('言语', verbalItems, font));
     }
 
     // 判断推理 section (dynamic rows based on reasoningItems)
     if (reasoningItems.isEmpty) {
-      rows.add(_categoryRow('判断推理', font, rowSpan: 1));
+      rows.add(_categoryRow('判断推理', font));
     } else {
       rows.addAll(_dynamicSectionRows('判断推理', reasoningItems, font));
     }
@@ -142,7 +146,6 @@ class PdfGenerator {
     String text,
     pw.Font font, {
     bool isHeader = false,
-    int? rowSpan,
   }) {
     return pw.Container(
       padding: const pw.EdgeInsets.symmetric(vertical: 4, horizontal: 4),
@@ -166,12 +169,11 @@ class PdfGenerator {
   /// Creates a simple category row (for single-row sections).
   static pw.TableRow _categoryRow(
     String category,
-    pw.Font font, {
-    int? rowSpan,
-  }) {
+    pw.Font font,
+  ) {
     return pw.TableRow(
       children: [
-        _cell(category, font, rowSpan: rowSpan),
+        _cell(category, font),
         _emptyCell(font),
         _emptyCell(font),
         _emptyCell(font),
@@ -192,7 +194,7 @@ class PdfGenerator {
       rows.add(pw.TableRow(
         children: [
           if (isFirst)
-            _cell(category, font, rowSpan: items.length)
+            _cell(category, font)
           else
             _emptyCell(font),
           _cell(items[i], font),

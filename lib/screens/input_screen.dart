@@ -29,6 +29,7 @@ class _InputScreenState extends State<InputScreen> {
   Future<void> _loadSavedData() async {
     final verbal = await PersistenceService.getLastVerbalItems();
     final reasoning = await PersistenceService.getLastReasoningItems();
+    if (!mounted) return;
     setState(() {
       _verbalController.text = verbal ?? '逻辑填空\n语句衔接\n片段阅读';
       _reasoningController.text = reasoning ?? '类比推理\n图推\n定义判断\n逻辑判断';
@@ -63,16 +64,26 @@ class _InputScreenState extends State<InputScreen> {
       reasoningItems: _reasoningController.text,
     );
 
-    final pdfBytes = await PdfGenerator.generatePdf(plan);
+    try {
+      final pdfBytes = await PdfGenerator.generatePdf(plan);
 
-    if (!mounted) return;
-    setState(() => _isGenerating = false);
+      if (!mounted) return;
 
-    Navigator.of(context).push(
-      MaterialPageRoute(
-        builder: (_) => PreviewScreen(pdfBytes: pdfBytes),
-      ),
-    );
+      Navigator.of(context).push(
+        MaterialPageRoute(
+          builder: (_) => PreviewScreen(pdfBytes: pdfBytes),
+        ),
+      );
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('生成 PDF 失败: $e')),
+      );
+    } finally {
+      if (mounted) {
+        setState(() => _isGenerating = false);
+      }
+    }
   }
 
   @override
