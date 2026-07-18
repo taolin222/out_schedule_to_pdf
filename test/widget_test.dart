@@ -1,5 +1,4 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:out_schedule_to_pdf/main.dart';
@@ -9,8 +8,10 @@ void main() {
     SharedPreferences.setMockInitialValues({});
     await tester.pumpWidget(const MyApp());
 
-    // Verify the app title is shown
-    expect(find.text('模块学习计划生成器'), findsOneWidget);
+    // Verify header and section titles
+    expect(find.text('学习计划'), findsOneWidget);
+    expect(find.text('日期设置'), findsOneWidget);
+    expect(find.text('学习内容'), findsOneWidget);
 
     // Verify date picker fields are present
     expect(find.text('考试日期'), findsOneWidget);

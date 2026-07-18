@@ -50,10 +50,8 @@ class _InputScreenState extends State<InputScreen> {
 
   Future<void> _generatePdf() async {
     if (!_isFormValid) return;
-
     setState(() => _isGenerating = true);
 
-    // Save current input
     await PersistenceService.saveVerbalItems(_verbalController.text);
     await PersistenceService.saveReasoningItems(_reasoningController.text);
 
@@ -66,89 +64,164 @@ class _InputScreenState extends State<InputScreen> {
 
     try {
       final pdfBytes = await PdfGenerator.generatePdf(plan);
-
       if (!mounted) return;
-
       Navigator.of(context).push(
-        MaterialPageRoute(
-          builder: (_) => PreviewScreen(pdfBytes: pdfBytes),
-        ),
+        MaterialPageRoute(builder: (_) => PreviewScreen(pdfBytes: pdfBytes)),
       );
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('生成 PDF 失败: $e')),
+        SnackBar(content: Text('生成失败：$e')),
       );
     } finally {
-      if (mounted) {
-        setState(() => _isGenerating = false);
-      }
+      if (mounted) setState(() => _isGenerating = false);
     }
   }
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('模块学习计划生成器'),
-      ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            DatePickerField(
-              label: '考试日期',
-              selectedDate: _examDate,
-              onDateSelected: (date) {
-                setState(() {
-                  _examDate = date;
-                  // If plan date is after exam date, reset it
-                  if (_planDate != null && _planDate!.isAfter(date)) {
-                    _planDate = null;
-                  }
-                });
-              },
-              firstDate: DateTime.now(),
-              lastDate: DateTime(2035),
-            ),
-            DatePickerField(
-              label: '计划日期',
-              selectedDate: _planDate,
-              onDateSelected: (date) => setState(() => _planDate = date),
-              firstDate: DateTime(2020),
-              lastDate: _examDate, // 限制 ≤ 考试日期
-            ),
-            const SizedBox(height: 16),
-            const Divider(),
-            MultiLineTextField(
-              label: '言语',
-              controller: _verbalController,
-              hintText: '每行一个子项目',
-            ),
-            const SizedBox(height: 8),
-            MultiLineTextField(
-              label: '判断推理',
-              controller: _reasoningController,
-              hintText: '每行一个子项目',
-            ),
-            const SizedBox(height: 24),
-            ElevatedButton(
-              onPressed: _isFormValid && !_isGenerating ? _generatePdf : null,
-              style: ElevatedButton.styleFrom(
-                padding: const EdgeInsets.symmetric(vertical: 16),
+      body: SafeArea(
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.all(20),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const SizedBox(height: 12),
+              // Header
+              Row(
+                children: [
+                  Container(
+                    width: 4,
+                    height: 28,
+                    decoration: BoxDecoration(
+                      color: theme.colorScheme.primary,
+                      borderRadius: BorderRadius.circular(2),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Text('学习计划', style: theme.textTheme.headlineSmall?.copyWith(
+                    fontWeight: FontWeight.bold,
+                  )),
+                ],
               ),
-              child: _isGenerating
-                  ? const SizedBox(
-                      width: 20,
-                      height: 20,
-                      child: CircularProgressIndicator(strokeWidth: 2),
-                    )
-                  : const Text('生成预览', style: TextStyle(fontSize: 16)),
-            ),
-          ],
+              const SizedBox(height: 4),
+              Text('填写信息后生成可打印的每日学习计划表',
+                  style: theme.textTheme.bodyMedium?.copyWith(
+                    color: const Color(0xFF6B7280),
+                  )),
+              const SizedBox(height: 24),
+
+              // 日期卡片
+              Card(
+                child: Padding(
+                  padding: const EdgeInsets.all(20),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      _sectionHeader(theme, Icons.date_range_rounded, '日期设置'),
+                      const SizedBox(height: 16),
+                      DatePickerField(
+                        label: '考试日期',
+                        iconText: '目标',
+                        selectedDate: _examDate,
+                        onDateSelected: (date) {
+                          setState(() {
+                            _examDate = date;
+                            if (_planDate != null && _planDate!.isAfter(date)) {
+                              _planDate = null;
+                            }
+                          });
+                        },
+                        firstDate: DateTime.now(),
+                        lastDate: DateTime(2035),
+                      ),
+                      const SizedBox(height: 20),
+                      DatePickerField(
+                        label: '计划日期',
+                        iconText: '计划',
+                        selectedDate: _planDate,
+                        onDateSelected: (date) => setState(() => _planDate = date),
+                        firstDate: DateTime(2020),
+                        lastDate: _examDate,
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              const SizedBox(height: 16),
+
+              // 内容卡片
+              Card(
+                child: Padding(
+                  padding: const EdgeInsets.all(20),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      _sectionHeader(theme, Icons.menu_book_rounded, '学习内容'),
+                      const SizedBox(height: 16),
+                      MultiLineTextField(
+                        label: '言语',
+                        badge: '行测',
+                        controller: _verbalController,
+                        hintText: '每行输入一个子项目',
+                      ),
+                      const SizedBox(height: 20),
+                      MultiLineTextField(
+                        label: '判断推理',
+                        badge: '行测',
+                        controller: _reasoningController,
+                        hintText: '每行输入一个子项目',
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              const SizedBox(height: 28),
+
+              // 生成按钮
+              SizedBox(
+                width: double.infinity,
+                height: 52,
+                child: ElevatedButton(
+                  onPressed: _isFormValid && !_isGenerating ? _generatePdf : null,
+                  child: _isGenerating
+                      ? const SizedBox(
+                          width: 22, height: 22,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2.5,
+                            color: Colors.white,
+                          ),
+                        )
+                      : Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            const Icon(Icons.picture_as_pdf_rounded, size: 20),
+                            const SizedBox(width: 8),
+                            const Text('生成预览'),
+                          ],
+                        ),
+                ),
+              ),
+              const SizedBox(height: 32),
+            ],
+          ),
         ),
       ),
+    );
+  }
+
+  Widget _sectionHeader(ThemeData theme, IconData icon, String title) {
+    return Row(
+      children: [
+        Icon(icon, size: 20, color: theme.colorScheme.primary),
+        const SizedBox(width: 8),
+        Text(title, style: theme.textTheme.titleMedium?.copyWith(
+          fontWeight: FontWeight.w600,
+          color: theme.colorScheme.primary,
+        )),
+      ],
     );
   }
 }
