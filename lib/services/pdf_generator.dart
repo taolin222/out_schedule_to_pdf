@@ -54,6 +54,8 @@ class PdfGenerator {
         _buildHeader(plan, font),   // 标题 + 日期信息行
         pw.SizedBox(height: 8),
         _buildTable(plan, font),    // 学习计划表格
+        pw.SizedBox(height: 0),
+        _buildSummary(font),        // 总结（与表格同宽）
       ],
     ));
     return pdf.save();  // 返回 PDF 字节数据
@@ -137,31 +139,6 @@ class PdfGenerator {
         _borderedCell(texts[i + 1], font, height: height, bottomBorder: bottomBorder));
     final right = _borderedCell(texts[6], font, height: height, bottomBorder: bottomBorder);
     return pw.TableRow(children: [left, ...middle, right]);
-  }
-
-  /// 总结行：7 列合并为一块，内部无竖线
-  static pw.TableRow _summaryRow(pw.Font font) {
-    // 只有第一个单元格有内容 + 边框，其余 6 个 SizedBox 留空
-    final cell = pw.Container(
-      width: double.infinity,
-      height: 170,  // 约 6 行高度
-      decoration: const pw.BoxDecoration(
-        border: pw.Border(
-          bottom: pw.BorderSide(color: PdfColors.black, width: 0.5),
-          left: pw.BorderSide(color: PdfColors.black, width: 0.5),
-          right: pw.BorderSide(color: PdfColors.black, width: 0.5),
-        ),
-      ),
-      padding: const pw.EdgeInsets.all(8),
-      alignment: pw.Alignment.topLeft,
-      child: pw.Text('总结及心得：',
-          style: pw.TextStyle(font: font, fontSize: _fontSize, fontWeight: pw.FontWeight.bold)),
-    );
-    return pw.TableRow(children: [
-      cell, pw.SizedBox.shrink(), pw.SizedBox.shrink(),
-      pw.SizedBox.shrink(), pw.SizedBox.shrink(),
-      pw.SizedBox.shrink(), pw.SizedBox.shrink(),
-    ]);
   }
 
   // ─── 表格主体构建 ────────────────────────────────────────────
@@ -258,9 +235,7 @@ class PdfGenerator {
     rows.add(_makeRow(['', '大作文', '', '', '', '', ''], font,
         height: rh, bottomBorder: true));
 
-    // ── 总结及心得 ─────────────────────────────────────────────
-    // 整块合并，内部无分割线
-    rows.add(_summaryRow(font));
+    // ── 总结及心得 ── 在表格外部用 _buildSummary() 渲染 ──────
 
     // 表格外框（内部线由每个 cell 自己控制）
     return pw.Table(
@@ -271,6 +246,26 @@ class PdfGenerator {
       ),
       columnWidths: _colWidths,
       children: rows,
+    );
+  }
+
+  /// 总结及心得（独立于表格外，全宽显示，无内部线条）
+  static pw.Widget _buildSummary(pw.Font font) {
+    return pw.Container(
+      width: double.infinity,
+      height: 170,
+      decoration: const pw.BoxDecoration(
+        border: pw.Border(
+          top: pw.BorderSide(color: PdfColors.black, width: 0.5),
+          bottom: pw.BorderSide(color: PdfColors.black, width: 0.5),
+          left: pw.BorderSide(color: PdfColors.black, width: 0.5),
+          right: pw.BorderSide(color: PdfColors.black, width: 0.5),
+        ),
+      ),
+      padding: const pw.EdgeInsets.all(8),
+      alignment: pw.Alignment.topLeft,
+      child: pw.Text('总结及心得：',
+          style: pw.TextStyle(font: font, fontSize: _fontSize, fontWeight: pw.FontWeight.bold)),
     );
   }
 }
