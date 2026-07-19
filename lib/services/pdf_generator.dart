@@ -75,7 +75,7 @@ class PdfGenerator {
 
   static pw.Widget _borderedCell(String text, pw.Font font,
       {double height = 38, bool bottomBorder = true, bool alignLeft = false,
-      bool noRightBorder = false, bool noLeftBorder = false}) {
+      bool noRightBorder = false, bool noLeftBorder = false, bool topBorder = false}) {
     final child = text.isEmpty
         ? pw.SizedBox.shrink()
         : pw.Text(text,
@@ -85,6 +85,7 @@ class PdfGenerator {
       width: double.infinity, height: height,
       decoration: pw.BoxDecoration(
         border: pw.Border(
+          top: topBorder ? const pw.BorderSide(color: PdfColors.black, width: 0.5) : pw.BorderSide.none,
           bottom: bottomBorder ? const pw.BorderSide(color: PdfColors.black, width: 0.5) : pw.BorderSide.none,
           left: noLeftBorder ? pw.BorderSide.none : const pw.BorderSide(color: PdfColors.black, width: 0.5),
           right: noRightBorder ? pw.BorderSide.none : const pw.BorderSide(color: PdfColors.black, width: 0.5),
@@ -123,14 +124,14 @@ class PdfGenerator {
 
     // 表头
     rows.add(pw.TableRow(children: [
-      _borderedCell('', font, height: rh),
-      _borderedCell('任务', font, height: rh, noRightBorder: true, noLeftBorder: true),
-      _borderedCell('', font, height: rh, noRightBorder: true, noLeftBorder: true),
-      _borderedCell('', font, height: rh, noLeftBorder: true),
-      _borderedCell('完成', font, height: rh),
-      _borderedCell('做题时间', font, height: rh),
-      _borderedCell('复盘时间', font, height: rh),
-      _borderedCell('总用时', font, height: rh),
+      _borderedCell('', font, height: rh, topBorder: true, noRightBorder: true),
+      _borderedCell('', font, height: rh, topBorder: true, noRightBorder: true, noLeftBorder: true),
+      _borderedCell('任务', font, height: rh, topBorder: true, noRightBorder: true, noLeftBorder: true),
+      _borderedCell('', font, height: rh, topBorder: true, noLeftBorder: true),
+      _borderedCell('完成', font, height: rh, topBorder: true),
+      _borderedCell('做题时间', font, height: rh, topBorder: true),
+      _borderedCell('复盘时间', font, height: rh, topBorder: true),
+      _borderedCell('总用时', font, height: rh, topBorder: true),
     ]));
 
     // 言语（动态）
@@ -139,7 +140,7 @@ class PdfGenerator {
       rows.add(_makeRow(
           [_catChar('言语', i), vItems[i], '', '', '', '', '', ''], font,
           height: rh, bottomBorder: true,
-          mergeCol1Right: true, leftAlignCol: 1));
+          mergeCol0: i < vItems.length - 1, mergeCol1Right: true, leftAlignCol: 1));
     }
 
     // 判断推理（动态）
@@ -148,7 +149,7 @@ class PdfGenerator {
       rows.add(_makeRow(
           [_catChar('判断推理', i), rItems[i], '', '', '', '', '', ''], font,
           height: rh, bottomBorder: true,
-          mergeCol1Right: true, leftAlignCol: 1));
+          mergeCol0: i < rItems.length - 1, mergeCol1Right: true, leftAlignCol: 1));
     }
 
     // 数量（固定2行）
@@ -165,19 +166,19 @@ class PdfGenerator {
 
     // 政治理论
     rows.add(_makeRow([_catChar('政治理论', 0), '', '', '', '', '', '', ''], font,
-        height: rh, bottomBorder: true, mergeCol1Right: true));
+        height: rh, bottomBorder: true, mergeCol1Right: true, mergeCol2Right: true));
 
     // 常识
     rows.add(_makeRow(['常识', '', '', '', '', '', '', ''], font,
-        height: rh, bottomBorder: true, mergeCol1Right: true));
+        height: rh, bottomBorder: true, mergeCol1Right: true, mergeCol2Right: true));
 
     // 申论（小题+概括题/分析题/贯彻执行+大作文）
     rows.add(_makeRow(['', '小题', '概括题', '', '', '', '', ''], font,
-        height: rh, bottomBorder: true, mergeCol1: true, leftAlignCol: 2));
+        height: rh, bottomBorder: true, mergeCol0: true, mergeCol1: true, leftAlignCol: 2));
     rows.add(_makeRow(['申论', '', '分析题', '', '', '', '', ''], font,
-        height: rh, bottomBorder: true, mergeCol1: true, leftAlignCol: 2));
+        height: rh, bottomBorder: true, mergeCol0: true, mergeCol1: true, leftAlignCol: 2));
     rows.add(_makeRow(['', '', '贯彻执行', '', '', '', '', ''], font,
-        height: rh, bottomBorder: true, mergeCol1: true, leftAlignCol: 2));
+        height: rh, bottomBorder: true, mergeCol0: true, leftAlignCol: 2));
     rows.add(_makeRow(['', '大作文', '', '', '', '', '', ''], font,
         height: rh, bottomBorder: true, mergeCol2Right: true, leftAlignCol: 1));
 
