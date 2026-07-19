@@ -14,8 +14,8 @@ class InputScreen extends StatefulWidget {
 }
 
 class _InputScreenState extends State<InputScreen> {
-  DateTime? _examDate;
-  DateTime? _planDate;
+  static final _examDate = DateTime(2026, 12, 6); // 固定考试日期
+  late DateTime _planDate;
   final _verbalController = TextEditingController();
   final _reasoningController = TextEditingController();
   bool _isGenerating = false;
@@ -23,6 +23,7 @@ class _InputScreenState extends State<InputScreen> {
   @override
   void initState() {
     super.initState();
+    _planDate = DateTime.now();
     _loadSavedData();
   }
 
@@ -44,7 +45,6 @@ class _InputScreenState extends State<InputScreen> {
   }
 
   bool get _isFormValid =>
-      _examDate != null && _planDate != null &&
       _verbalController.text.trim().isNotEmpty &&
       _reasoningController.text.trim().isNotEmpty;
 
@@ -56,8 +56,8 @@ class _InputScreenState extends State<InputScreen> {
     await PersistenceService.saveReasoningItems(_reasoningController.text);
 
     final plan = StudyPlan(
-      examDate: _examDate!,
-      planDate: _planDate!,
+      examDate: _examDate,
+      planDate: _planDate,
       verbalItems: _verbalController.text,
       reasoningItems: _reasoningController.text,
     );
@@ -90,12 +90,10 @@ class _InputScreenState extends State<InputScreen> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               const SizedBox(height: 12),
-              // Header
               Row(
                 children: [
                   Container(
-                    width: 4,
-                    height: 28,
+                    width: 4, height: 28,
                     decoration: BoxDecoration(
                       color: theme.colorScheme.primary,
                       borderRadius: BorderRadius.circular(2),
@@ -123,20 +121,44 @@ class _InputScreenState extends State<InputScreen> {
                     children: [
                       _sectionHeader(theme, Icons.date_range_rounded, '日期设置'),
                       const SizedBox(height: 16),
-                      DatePickerField(
-                        label: '考试日期',
-                        iconText: '目标',
-                        selectedDate: _examDate,
-                        onDateSelected: (date) {
-                          setState(() {
-                            _examDate = date;
-                            if (_planDate != null && _planDate!.isAfter(date)) {
-                              _planDate = null;
-                            }
-                          });
-                        },
-                        firstDate: DateTime.now(),
-                        lastDate: DateTime(2035),
+                      // 考试日期（固定显示，不可修改）
+                      Row(
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                            margin: const EdgeInsets.only(right: 8),
+                            decoration: BoxDecoration(
+                              color: theme.colorScheme.primaryContainer,
+                              borderRadius: BorderRadius.circular(4),
+                            ),
+                            child: Text('目标', style: TextStyle(
+                              fontSize: 11,
+                              color: theme.colorScheme.onPrimaryContainer,
+                              fontWeight: FontWeight.w600,
+                            )),
+                          ),
+                          Text('考试日期', style: theme.textTheme.titleMedium?.copyWith(
+                            fontWeight: FontWeight.w600,
+                          )),
+                        ],
+                      ),
+                      const SizedBox(height: 8),
+                      Container(
+                        width: double.infinity,
+                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFF3F4F6),
+                          border: Border.all(color: const Color(0xFFE5E7EB)),
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: Row(
+                          children: [
+                            Icon(Icons.lock_outline, size: 18, color: const Color(0xFF9CA3AF)),
+                            const SizedBox(width: 8),
+                            Text('2026年 12月 6日（固定）',
+                                style: const TextStyle(fontSize: 15, color: Color(0xFF6B7280))),
+                          ],
+                        ),
                       ),
                       const SizedBox(height: 20),
                       DatePickerField(
@@ -181,24 +203,18 @@ class _InputScreenState extends State<InputScreen> {
 
               // 生成按钮
               SizedBox(
-                width: double.infinity,
-                height: 52,
+                width: double.infinity, height: 52,
                 child: ElevatedButton(
                   onPressed: _isFormValid && !_isGenerating ? _generatePdf : null,
                   child: _isGenerating
-                      ? const SizedBox(
-                          width: 22, height: 22,
-                          child: CircularProgressIndicator(
-                            strokeWidth: 2.5,
-                            color: Colors.white,
-                          ),
-                        )
+                      ? const SizedBox(width: 22, height: 22,
+                          child: CircularProgressIndicator(strokeWidth: 2.5, color: Colors.white))
                       : Row(
                           mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            const Icon(Icons.picture_as_pdf_rounded, size: 20),
-                            const SizedBox(width: 8),
-                            const Text('生成预览'),
+                          children: const [
+                            Icon(Icons.picture_as_pdf_rounded, size: 20),
+                            SizedBox(width: 8),
+                            Text('生成预览'),
                           ],
                         ),
                 ),
@@ -209,7 +225,7 @@ class _InputScreenState extends State<InputScreen> {
         ),
       ),
     ),
-  );
+    );
   }
 
   Widget _sectionHeader(ThemeData theme, IconData icon, String title) {

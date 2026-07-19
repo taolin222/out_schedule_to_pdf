@@ -275,7 +275,7 @@ class PdfGenerator {
         height: 26,
         bottomBorder: true,
         mergeCol0: true,
-        mergeCol1Right: true,
+        mergeCol1Right: true, mergeCol2Right: true,
       ),
     );
     rows.add(
@@ -284,7 +284,7 @@ class PdfGenerator {
         font,
         height: 26,
         bottomBorder: true,
-        mergeCol1Right: true,
+        mergeCol1Right: true, mergeCol2Right: true,
       ),
     );
 
@@ -296,7 +296,7 @@ class PdfGenerator {
         height: 26,
         bottomBorder: true,
         mergeCol0: true,
-        mergeCol1Right: true,
+        mergeCol1Right: true, mergeCol2Right: true,
       ),
     );
     rows.add(
@@ -305,7 +305,7 @@ class PdfGenerator {
         font,
         height: 26,
         bottomBorder: true,
-        mergeCol1Right: true,
+        mergeCol1Right: true, mergeCol2Right: true,
       ),
     );
 
