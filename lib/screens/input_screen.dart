@@ -1,9 +1,12 @@
 import 'package:flutter/material.dart';
+import '../models/module_keys.dart';
 import '../models/study_plan.dart';
 import '../services/pdf_generator.dart';
+import '../services/persistence_service.dart';
 import '../widgets/date_picker_field.dart';
 import '../widgets/multi_line_text_field.dart';
 import 'preview_screen.dart';
+import 'reorder_screen.dart';
 
 class InputScreen extends StatefulWidget {
   const InputScreen({super.key});
@@ -18,12 +21,14 @@ class _InputScreenState extends State<InputScreen> {
   final _verbalController = TextEditingController();
   final _reasoningController = TextEditingController();
   bool _isGenerating = false;
+  List<String> _moduleOrder = ModuleKeys.defaultOrder;
 
   @override
   void initState() {
     super.initState();
     _planDate = DateTime.now();
     _loadSavedData();
+    _loadModuleOrder();
   }
 
   Future<void> _loadSavedData() async {
@@ -32,6 +37,21 @@ class _InputScreenState extends State<InputScreen> {
       _verbalController.text = '逻辑填空\n片段阅读';
       _reasoningController.text = '逻辑判断\n图推\n类比推理\n定义判断';
     });
+  }
+
+  Future<void> _loadModuleOrder() async {
+    try {
+      final stored = await PersistenceService.getModuleOrder();
+      if (!mounted) return;
+      setState(() {
+        _moduleOrder = ModuleKeys.fromStored(stored);
+      });
+    } catch (e) {
+      if (!mounted) return;
+      setState(() {
+        _moduleOrder = ModuleKeys.defaultOrder;
+      });
+    }
   }
 
   @override
@@ -59,7 +79,7 @@ class _InputScreenState extends State<InputScreen> {
     );
 
     try {
-      final pdfBytes = await PdfGenerator.generatePdf(plan);
+      final pdfBytes = await PdfGenerator.generatePdf(plan, moduleOrder: _moduleOrder);
       if (!mounted) return;
       Navigator.of(context).push(
         MaterialPageRoute(builder: (_) => PreviewScreen(pdfBytes: pdfBytes)),
@@ -106,6 +126,21 @@ class _InputScreenState extends State<InputScreen> {
                   style: theme.textTheme.bodyMedium?.copyWith(
                     color: const Color(0xFF6B7280),
                   )),
+              Align(
+                alignment: Alignment.centerRight,
+                child: IconButton(
+                  icon: Icon(Icons.settings_outlined, color: theme.colorScheme.primary),
+                  tooltip: '模块排序',
+                  onPressed: () async {
+                    final changed = await Navigator.of(context).push<bool>(
+                      MaterialPageRoute(builder: (_) => const ReorderScreen()),
+                    );
+                    if (changed == true && mounted) {
+                      _loadModuleOrder();
+                    }
+                  },
+                ),
+              ),
               const SizedBox(height: 24),
 
               // 日期卡片

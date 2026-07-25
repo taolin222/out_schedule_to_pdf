@@ -2,6 +2,7 @@ import 'dart:typed_data';
 import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
 import 'package:flutter/services.dart' show rootBundle;
+import '../models/module_keys.dart';
 import '../models/study_plan.dart';
 
 /// PDF 生成器
@@ -58,7 +59,7 @@ class PdfGenerator {
     return row == 0 ? category : '';
   }
 
-  static Future<Uint8List> generatePdf(StudyPlan plan) async {
+  static Future<Uint8List> generatePdf(StudyPlan plan, {List<String>? moduleOrder}) async {
     final pdf = pw.Document();
     final fontData = await rootBundle.load(
       'assets/fonts/NotoSansSC-Medium.ttf',
@@ -75,7 +76,7 @@ class PdfGenerator {
         build: (context) => [
           _buildHeader(plan, font),
           pw.SizedBox(height: 8),
-          _buildTable(plan, font),
+          _buildTable(plan, font, moduleOrder: moduleOrder),
           pw.SizedBox(height: 0),
           _buildSummary(font),
         ],
@@ -213,206 +214,112 @@ class PdfGenerator {
     return pw.TableRow(children: cells);
   }
 
+  // ─── 模块渲染函数（可排序） ──────────────────────────────────
+
+  static void _renderVerbal(List<pw.TableRow> rows, StudyPlan plan, pw.Font font, double rh) {
+    final vItems = plan.verbalItemList;
+    for (int i = 0; i < vItems.length; i++) {
+      final catTxt = vItems.length > 1 ? _catChar('言语', i) : (i == 0 ? '言语' : '');
+      rows.add(_makeRow(_ci8(catTxt, vItems[i]), font,
+          height: rh, mergeCol0: i < vItems.length - 1, leftAlignCol: 1));
+    }
+  }
+
+  static void _renderReasoning(List<pw.TableRow> rows, StudyPlan plan, pw.Font font, double rh) {
+    final rItems = plan.reasoningItemList;
+    for (int i = 0; i < rItems.length; i++) {
+      rows.add(_makeRow(_ci8(_cat2Line('判断推理', rItems.length, i), rItems[i]), font,
+          height: rh, mergeCol0: i < rItems.length - 1, leftAlignCol: 1));
+    }
+  }
+
+  static void _renderQuantity(List<pw.TableRow> rows, StudyPlan plan, pw.Font font, double rh) {
+    rows.add(_makeRow(_c8(_catChar('数量', 0)), font, height: 26, mergeCol0: true));
+    rows.add(_makeRow(_c8(_catChar('数量', 1)), font, height: 26));
+  }
+
+  static void _renderDataAnalysis(List<pw.TableRow> rows, StudyPlan plan, pw.Font font, double rh) {
+    rows.add(_makeRow(_c8(_catChar('资料分析', 0)), font, height: 26, mergeCol0: true));
+    rows.add(_makeRow(_c8(_catChar('资料分析', 1)), font, height: 26));
+  }
+
+  static void _renderPolitics(List<pw.TableRow> rows, StudyPlan plan, pw.Font font, double rh) {
+    rows.add(pw.TableRow(children: [
+      pw.Container(width: double.infinity, height: rh + 6,
+        decoration: const pw.BoxDecoration(border: pw.Border(
+          bottom: pw.BorderSide(color: PdfColors.black, width: 0.5),
+          left: pw.BorderSide(color: PdfColors.black, width: 0.5),
+          right: pw.BorderSide(color: PdfColors.black, width: 0.5),
+        )),
+        alignment: pw.Alignment.center,
+        padding: const pw.EdgeInsets.symmetric(horizontal: 6),
+        child: pw.Text('政治常识', style: pw.TextStyle(font: font, fontSize: 11, fontWeight: pw.FontWeight.bold),
+            textAlign: pw.TextAlign.center)),
+      pw.Container(width: double.infinity, height: rh + 6,
+        decoration: const pw.BoxDecoration(border: pw.Border(
+          bottom: pw.BorderSide(color: PdfColors.black, width: 0.5))),
+        child: pw.SizedBox.shrink()),
+      pw.Container(width: double.infinity, height: rh + 6,
+        decoration: const pw.BoxDecoration(border: pw.Border(
+          bottom: pw.BorderSide(color: PdfColors.black, width: 0.5))),
+        child: pw.SizedBox.shrink()),
+      pw.Container(width: double.infinity, height: rh + 6,
+        decoration: const pw.BoxDecoration(border: pw.Border(
+          bottom: pw.BorderSide(color: PdfColors.black, width: 0.5))),
+        child: pw.SizedBox.shrink()),
+      _borderedCell('', font, height: rh + 6),
+      _borderedCell('', font, height: rh + 6),
+      _borderedCell('', font, height: rh + 6),
+      _borderedCell('', font, height: rh + 6),
+    ]));
+  }
+
+  static void _renderCurrentAffairs(List<pw.TableRow> rows, StudyPlan plan, pw.Font font, double rh) {
+    rows.add(_makeRow(_c8('时政'), font, height: rh));
+  }
+
+  static void _renderShenlun(List<pw.TableRow> rows, StudyPlan plan, pw.Font font, double rh) {
+    rows.add(_makeRow(['', '小题', '概括题', '', '', '', '', ''], font,
+        height: rh, mergeCol1Right: false, mergeCol0: true, mergeCol1: true, leftAlignCol: 2));
+    rows.add(_makeRow(['申论', '', '分析题', '', '', '', '', ''], font,
+        height: rh, mergeCol1Right: false, mergeCol0: true, mergeCol1: true, leftAlignCol: 2));
+    rows.add(_makeRow(['', '', '贯彻执行', '', '', '', '', ''], font,
+        height: rh, mergeCol1Right: false, mergeCol0: true, leftAlignCol: 2));
+    rows.add(_makeRow(['', '大作文', '', '', '', '', '', ''], font,
+        height: rh, leftAlignCol: 1));
+  }
+
   // ─── 表格 ────────────────────────────────────────────────────
 
-  static pw.Widget _buildTable(StudyPlan plan, pw.Font font) {
+  static pw.Widget _buildTable(StudyPlan plan, pw.Font font, {List<String>? moduleOrder}) {
     final rows = <pw.TableRow>[];
     const rh = 32.0;
+    final order = moduleOrder ?? ModuleKeys.defaultOrder;
 
-    // 表头
-    rows.add(
-      pw.TableRow(
-        children: [
-          _borderedCell(
-            '',
-            font,
-            height: rh,
-            topBorder: true,
-            noRightBorder: true,
-          ),
-          _borderedCell(
-            '',
-            font,
-            height: rh,
-            topBorder: true,
-            noRightBorder: true,
-            noLeftBorder: true,
-          ),
-          _borderedCell(
-            '任务',
-            font,
-            height: rh,
-            topBorder: true,
-            noRightBorder: true,
-            noLeftBorder: true,
-          ),
-          _borderedCell(
-            '',
-            font,
-            height: rh,
-            topBorder: true,
-            noLeftBorder: true,
-          ),
-          _borderedCell('完成', font, height: rh, topBorder: true),
-          _borderedCell('做题时间', font, height: rh, topBorder: true),
-          _borderedCell('复盘时间', font, height: rh, topBorder: true),
-          _borderedCell('总用时', font, height: rh, topBorder: true),
-        ],
-      ),
-    );
+    // 表头（始终在最前）
+    rows.add(pw.TableRow(children: [
+      _borderedCell('', font, height: rh, topBorder: true, noRightBorder: true),
+      _borderedCell('', font, height: rh, topBorder: true, noRightBorder: true, noLeftBorder: true),
+      _borderedCell('任务', font, height: rh, topBorder: true, noRightBorder: true, noLeftBorder: true),
+      _borderedCell('', font, height: rh, topBorder: true, noLeftBorder: true),
+      _borderedCell('完成', font, height: rh, topBorder: true),
+      _borderedCell('做题时间', font, height: rh, topBorder: true),
+      _borderedCell('复盘时间', font, height: rh, topBorder: true),
+      _borderedCell('总用时', font, height: rh, topBorder: true),
+    ]));
 
-    // 动态模块：言语理解/判断推理（统一逻辑）
-
-    final vItems = plan.verbalItemList;
-    // 言语：1项时显示"言语"，>1项时逐字排列（言/语）
-    for (int i = 0; i < vItems.length; i++) {
-      final catTxt = vItems.length > 1
-          ? _catChar('言语', i)
-          : (i == 0 ? '言语' : '');
-      rows.add(
-        _makeRow(
-          _ci8(catTxt, vItems[i]),
-          font,
-          height: rh,
-          mergeCol0: i < vItems.length - 1,
-          leftAlignCol: 1,
-        ),
-      );
+    // 按用户设定的顺序渲染模块
+    for (final key in order) {
+      switch (key) {
+        case ModuleKeys.verbal:         _renderVerbal(rows, plan, font, rh); break;
+        case ModuleKeys.reasoning:      _renderReasoning(rows, plan, font, rh); break;
+        case ModuleKeys.quantity:       _renderQuantity(rows, plan, font, rh); break;
+        case ModuleKeys.dataAnalysis:   _renderDataAnalysis(rows, plan, font, rh); break;
+        case ModuleKeys.politics:       _renderPolitics(rows, plan, font, rh); break;
+        case ModuleKeys.currentAffairs: _renderCurrentAffairs(rows, plan, font, rh); break;
+        case ModuleKeys.shenlun:        _renderShenlun(rows, plan, font, rh); break;
+      }
     }
-    final rItems = plan.reasoningItemList;
-    // 判断推理：2字一行（判断/推理），固定12pt
-    for (int i = 0; i < rItems.length; i++) {
-      rows.add(
-        _makeRow(
-          _ci8(_cat2Line('判断推理', rItems.length, i), rItems[i]),
-          font,
-          height: rh,
-          mergeCol0: i < rItems.length - 1,
-          leftAlignCol: 1,
-        ),
-      );
-    }
-
-    // 数量（固定2行）
-    rows.add(
-      _makeRow(_c8(_catChar('数量', 0)), font, height: 26, mergeCol0: true),
-    );
-    rows.add(_makeRow(_c8(_catChar('数量', 1)), font, height: 26));
-
-    // 资料分析（固定2行）
-    rows.add(
-      _makeRow(_c8(_catChar('资料分析', 0)), font, height: 26, mergeCol0: true),
-    );
-    rows.add(_makeRow(_c8(_catChar('资料分析', 1)), font, height: 26));
-
-    // 政治常识
-    rows.add(
-      pw.TableRow(
-        children: [
-          pw.Container(
-            width: double.infinity,
-            height: rh + 6,
-            decoration: const pw.BoxDecoration(
-              border: pw.Border(
-                bottom: pw.BorderSide(color: PdfColors.black, width: 0.5),
-                left: pw.BorderSide(color: PdfColors.black, width: 0.5),
-                right: pw.BorderSide(color: PdfColors.black, width: 0.5),
-              ),
-            ),
-            alignment: pw.Alignment.center,
-            padding: const pw.EdgeInsets.symmetric(horizontal: 6),
-            child: pw.Text(
-              '政治常识',
-              style: pw.TextStyle(
-                font: font,
-                fontSize: 11,
-                fontWeight: pw.FontWeight.bold,
-              ),
-              textAlign: pw.TextAlign.center,
-            ),
-          ),
-          pw.Container(
-            width: double.infinity,
-            height: rh + 6,
-            decoration: const pw.BoxDecoration(
-              border: pw.Border(
-                bottom: pw.BorderSide(color: PdfColors.black, width: 0.5),
-              ),
-            ),
-            child: pw.SizedBox.shrink(),
-          ),
-          pw.Container(
-            width: double.infinity,
-            height: rh + 6,
-            decoration: const pw.BoxDecoration(
-              border: pw.Border(
-                bottom: pw.BorderSide(color: PdfColors.black, width: 0.5),
-              ),
-            ),
-            child: pw.SizedBox.shrink(),
-          ),
-          pw.Container(
-            width: double.infinity,
-            height: rh + 6,
-            decoration: const pw.BoxDecoration(
-              border: pw.Border(
-                bottom: pw.BorderSide(color: PdfColors.black, width: 0.5),
-              ),
-            ),
-            child: pw.SizedBox.shrink(),
-          ),
-          _borderedCell('', font, height: rh + 6),
-          _borderedCell('', font, height: rh + 6),
-          _borderedCell('', font, height: rh + 6),
-          _borderedCell('', font, height: rh + 6),
-        ],
-      ),
-    );
-
-    // 时政
-    rows.add(_makeRow(_c8('时政'), font, height: rh));
-
-    // 申论（小题+概括题/分析题/贯彻执行+大作文）
-    rows.add(
-      _makeRow(
-        ['', '小题', '概括题', '', '', '', '', ''],
-        font,
-        height: rh,
-        mergeCol1Right: false,
-        mergeCol0: true,
-        mergeCol1: true,
-        leftAlignCol: 2,
-      ),
-    );
-    rows.add(
-      _makeRow(
-        ['申论', '', '分析题', '', '', '', '', ''],
-        font,
-        height: rh,
-        mergeCol1Right: false,
-        mergeCol0: true,
-        mergeCol1: true,
-        leftAlignCol: 2,
-      ),
-    );
-    rows.add(
-      _makeRow(
-        ['', '', '贯彻执行', '', '', '', '', ''],
-        font,
-        height: rh,
-        mergeCol1Right: false,
-        mergeCol0: true,
-        leftAlignCol: 2,
-      ),
-    );
-    rows.add(
-      _makeRow(
-        ['', '大作文', '', '', '', '', '', ''],
-        font,
-        height: rh,
-        leftAlignCol: 1,
-      ),
-    );
 
     return pw.Table(border: null, columnWidths: _colWidths, children: rows);
   }

@@ -1,6 +1,7 @@
 import 'package:shared_preferences/shared_preferences.dart';
 
 class PersistenceService {
+  static const _orderKey = 'module_order';
   static const _verbalKey = 'last_verbal_items';
   static const _reasoningKey = 'last_reasoning_items';
 
@@ -22,5 +23,15 @@ class PersistenceService {
   static Future<void> saveReasoningItems(String value) async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString(_reasoningKey, value);
+  }
+
+  static Future<String?> getModuleOrder() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getString(_orderKey);
+  }
+
+  static Future<void> saveModuleOrder(String value) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString(_orderKey, value);
   }
 }
