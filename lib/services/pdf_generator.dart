@@ -245,7 +245,7 @@ class PdfGenerator {
 
   static void _renderPolitics(List<pw.TableRow> rows, StudyPlan plan, pw.Font font, double rh) {
     // 使用统一的 _makeRow，确保边框与其他模块一致
-    rows.add(_makeRow(_c8('政治常识'), font, height: rh + 6, catFontSize: 11));
+    rows.add(_makeRow(['政治\n常识', '', '', '', '', '', '', ''], font, height: rh + 6, catFontSize: 11));
   }
 
   static void _renderCurrentAffairs(List<pw.TableRow> rows, StudyPlan plan, pw.Font font, double rh) {
