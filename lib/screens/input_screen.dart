@@ -6,6 +6,8 @@ import '../services/persistence_service.dart';
 import '../widgets/date_picker_field.dart';
 import '../widgets/multi_line_text_field.dart';
 import 'preview_screen.dart';
+import '../widgets/section_header.dart';
+import '../widgets/fixed_date_display.dart';
 import 'reorder_screen.dart';
 
 class InputScreen extends StatefulWidget {
@@ -150,47 +152,9 @@ class _InputScreenState extends State<InputScreen> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      _sectionHeader(theme, Icons.date_range_rounded, '日期设置'),
+                      const SectionHeader(icon: Icons.date_range_rounded, title: '日期设置'),
                       const SizedBox(height: 16),
-                      // 考试日期（固定显示，不可修改）
-                      Row(
-                        children: [
-                          Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                            margin: const EdgeInsets.only(right: 8),
-                            decoration: BoxDecoration(
-                              color: theme.colorScheme.primaryContainer,
-                              borderRadius: BorderRadius.circular(4),
-                            ),
-                            child: Text('目标', style: TextStyle(
-                              fontSize: 11,
-                              color: theme.colorScheme.onPrimaryContainer,
-                              fontWeight: FontWeight.w600,
-                            )),
-                          ),
-                          Text('考试日期', style: theme.textTheme.titleMedium?.copyWith(
-                            fontWeight: FontWeight.w600,
-                          )),
-                        ],
-                      ),
-                      const SizedBox(height: 8),
-                      Container(
-                        width: double.infinity,
-                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-                        decoration: BoxDecoration(
-                          color: const Color(0xFFF3F4F6),
-                          border: Border.all(color: const Color(0xFFE5E7EB)),
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        child: Row(
-                          children: [
-                            Icon(Icons.lock_outline, size: 18, color: const Color(0xFF9CA3AF)),
-                            const SizedBox(width: 8),
-                            Text('2026年 12月 6日（固定）',
-                                style: const TextStyle(fontSize: 15, color: Color(0xFF6B7280))),
-                          ],
-                        ),
-                      ),
+                      const FixedDateDisplay(dateText: '2026年 12月 6日（固定）'),
                       const SizedBox(height: 20),
                       DatePickerField(
                         label: '计划日期',
@@ -213,7 +177,7 @@ class _InputScreenState extends State<InputScreen> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      _sectionHeader(theme, Icons.menu_book_rounded, '学习内容'),
+                      const SectionHeader(icon: Icons.menu_book_rounded, title: '学习内容'),
                       const SizedBox(height: 16),
                       MultiLineTextField(
                         label: '言语',
@@ -259,16 +223,4 @@ class _InputScreenState extends State<InputScreen> {
     );
   }
 
-  Widget _sectionHeader(ThemeData theme, IconData icon, String title) {
-    return Row(
-      children: [
-        Icon(icon, size: 20, color: theme.colorScheme.primary),
-        const SizedBox(width: 8),
-        Text(title, style: theme.textTheme.titleMedium?.copyWith(
-          fontWeight: FontWeight.w600,
-          color: theme.colorScheme.primary,
-        )),
-      ],
-    );
-  }
 }
