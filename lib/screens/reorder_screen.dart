@@ -13,6 +13,7 @@ class _ReorderScreenState extends State<ReorderScreen> {
   List<String> _modules = [];
   bool _loaded = false;
   bool _saving = false;
+  bool _isDirty = false;
 
   @override
   void initState() {
@@ -42,7 +43,7 @@ class _ReorderScreenState extends State<ReorderScreen> {
     try {
       await PersistenceService.saveModuleOrder(ModuleKeys.toStored(_modules));
       if (!mounted) return;
-      Navigator.of(context).pop(true); // true = order changed
+      Navigator.of(context).pop(true);
     } catch (e) {
       setState(() => _saving = false);
       if (!mounted) return;
@@ -54,6 +55,9 @@ class _ReorderScreenState extends State<ReorderScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final canSave = _isDirty && !_saving;
+
     return Scaffold(
       appBar: AppBar(
         title: const Text('模块排序'),
@@ -61,6 +65,30 @@ class _ReorderScreenState extends State<ReorderScreen> {
           icon: const Icon(Icons.arrow_back),
           onPressed: () => Navigator.of(context).pop(false),
         ),
+        actions: [
+          // 右上角保存按钮
+          Center(
+            child: Padding(
+              padding: const EdgeInsets.only(right: 12),
+              child: SizedBox(
+                height: 34,
+                child: TextButton(
+                  onPressed: canSave ? _saveOrder : null,
+                  style: TextButton.styleFrom(
+                    foregroundColor: canSave ? theme.colorScheme.primary : const Color(0xFFD1D5DB),
+                    backgroundColor: canSave ? theme.colorScheme.primaryContainer : Colors.transparent,
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                    padding: const EdgeInsets.symmetric(horizontal: 12),
+                  ),
+                  child: _saving
+                      ? const SizedBox(width: 16, height: 16,
+                          child: CircularProgressIndicator(strokeWidth: 2))
+                      : const Text('保存', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600)),
+                ),
+              ),
+            ),
+          ),
+        ],
       ),
       body: _loaded
           ? ReorderableListView.builder(
@@ -71,6 +99,7 @@ class _ReorderScreenState extends State<ReorderScreen> {
                 setState(() {
                   final item = _modules.removeAt(oldIndex);
                   _modules.insert(newIndex, item);
+                  _isDirty = true;
                 });
               },
               itemBuilder: (context, index) {
@@ -92,14 +121,6 @@ class _ReorderScreenState extends State<ReorderScreen> {
               },
             )
           : const Center(child: CircularProgressIndicator()),
-      floatingActionButton: FloatingActionButton.extended(
-        onPressed: _saving ? null : _saveOrder,
-        icon: _saving
-            ? const SizedBox(width: 20, height: 20,
-                child: CircularProgressIndicator(strokeWidth: 2.5, color: Colors.white))
-            : const Icon(Icons.save),
-        label: Text(_saving ? '保存中...' : '保存'),
-      ),
     );
   }
 }

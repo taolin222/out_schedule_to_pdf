@@ -132,11 +132,23 @@ class _InputScreenState extends State<InputScreen> {
                   icon: Icon(Icons.settings_outlined, color: theme.colorScheme.primary),
                   tooltip: '模块排序',
                   onPressed: () async {
-                    final changed = await Navigator.of(context).push<bool>(
+                    final nav = Navigator.of(context);
+                    final messenger = ScaffoldMessenger.of(context);
+                    final changed = await nav.push<bool>(
                       MaterialPageRoute(builder: (_) => const ReorderScreen()),
                     );
                     if (changed == true && mounted) {
-                      _loadModuleOrder();
+                      await _loadModuleOrder();
+                      if (!mounted) return;
+                      messenger.showSnackBar(
+                        SnackBar(
+                          content: const Text('✓ 保存成功'),
+                          duration: const Duration(seconds: 1),
+                          behavior: SnackBarBehavior.floating,
+                          margin: const EdgeInsets.only(top: 8, left: 80, right: 80),
+                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                        ),
+                      );
                     }
                   },
                 ),
