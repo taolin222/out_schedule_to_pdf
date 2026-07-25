@@ -260,7 +260,7 @@ class PdfGenerator {
     rows.add(_makeRow(['', '', '贯彻执行', '', '', '', '', ''], font,
         height: rh, mergeCol1Right: false, mergeCol2Right: false, mergeCol0: true, leftAlignCol: 2));
     rows.add(_makeRow(['', '大作文', '', '', '', '', '', ''], font,
-        height: rh, leftAlignCol: 1));
+        height: rh, mergeCol2Right: false, leftAlignCol: 1));
   }
 
   // ─── 表格 ────────────────────────────────────────────────────
