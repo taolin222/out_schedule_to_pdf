@@ -134,6 +134,7 @@ class _InputScreenState extends State<InputScreen> {
                   onPressed: () async {
                     final nav = Navigator.of(context);
                     final messenger = ScaffoldMessenger.of(context);
+                    final screenWidth = MediaQuery.of(context).size.width;
                     final changed = await nav.push<bool>(
                       MaterialPageRoute(builder: (_) => const ReorderScreen()),
                     );
@@ -145,8 +146,9 @@ class _InputScreenState extends State<InputScreen> {
                           content: const Text('✓ 保存成功'),
                           duration: const Duration(seconds: 1),
                           behavior: SnackBarBehavior.floating,
-                          margin: const EdgeInsets.only(top: 8, left: 80, right: 80),
-                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                          width: 130,
+                          margin: EdgeInsets.fromLTRB(screenWidth - 150, 8, 8, 0),
+                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
                         ),
                       );
                     }
