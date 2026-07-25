@@ -110,7 +110,7 @@ class _ReorderScreenState extends State<ReorderScreen> {
             ? const SizedBox(width: 18, height: 18,
                 child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
             : const Icon(Icons.save),
-        label: Text(_saving ? '保存中...' : '保存顺序'),
+        label: Text(_saving ? '保存中...' : '保存'),
       ),
     );
   }
