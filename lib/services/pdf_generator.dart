@@ -24,14 +24,13 @@ class PdfGenerator {
 
   // 2字一行（例：判断推理→"判断"/"推理"），根据子项目数自动调字体大小
   static String _cat2Line(String name, int itemCount, int row) {
-    if (name.length == 4) {
+    if (name.length >= 4) {
       if (row == 0) return name.substring(0, 2);
       if (row == 1) return name.substring(2, 4);
     }
     return row == 0 ? name : '';
   }
 
-  static double _catFontSize(int itemCount) => itemCount <= 2 ? 9.0 : _fontSize;
   // 仅分类名（其余列全空）
   static List<String> _c8(String cat) => [cat, '', '', '', '', '', '', ''];
   // 分类名+子项目
@@ -49,6 +48,7 @@ class PdfGenerator {
   // 旧版单字拆分（用于数量/资料分析等）
   static String _catChar(String category, int row) {
     const chars = {
+      '言语': ['言', '语'],
       '数量': ['数', '量'],
       '资料分析': ['资料', '分析'],
       '政治常识': ['政治常识'],
@@ -262,24 +262,36 @@ class PdfGenerator {
     );
 
     // 动态模块：言语理解/判断推理（统一逻辑）
-    void addDynamicSection(String name, List<String> items) {
-      final cnt = items.length;
-      for (int i = 0; i < cnt; i++) {
-        rows.add(
-          _makeRow(
-            _ci8(_cat2Line(name, cnt, i), items[i]),
-            font,
-            height: rh,
-            mergeCol0: i < cnt - 1,
-            leftAlignCol: 1,
-            catFontSize: _catFontSize(cnt),
-          ),
-        );
-      }
-    }
 
-    addDynamicSection('言语理解', plan.verbalItemList);
-    addDynamicSection('判断推理', plan.reasoningItemList);
+    final vItems = plan.verbalItemList;
+    // 言语：1项时显示"言语"，>1项时逐字排列（言/语）
+    for (int i = 0; i < vItems.length; i++) {
+      final catTxt = vItems.length > 1
+          ? _catChar('言语', i)
+          : (i == 0 ? '言语' : '');
+      rows.add(
+        _makeRow(
+          _ci8(catTxt, vItems[i]),
+          font,
+          height: rh,
+          mergeCol0: i < vItems.length - 1,
+          leftAlignCol: 1,
+        ),
+      );
+    }
+    final rItems = plan.reasoningItemList;
+    // 判断推理：2字一行（判断/推理），固定12pt
+    for (int i = 0; i < rItems.length; i++) {
+      rows.add(
+        _makeRow(
+          _ci8(_cat2Line('判断推理', rItems.length, i), rItems[i]),
+          font,
+          height: rh,
+          mergeCol0: i < rItems.length - 1,
+          leftAlignCol: 1,
+        ),
+      );
+    }
 
     // 数量（固定2行）
     rows.add(
@@ -410,7 +422,7 @@ class PdfGenerator {
   static pw.Widget _buildSummary(pw.Font font) {
     return pw.Container(
       width: double.infinity,
-      height: 200,
+      height: 180,
       decoration: const pw.BoxDecoration(
         border: pw.Border(
           top: pw.BorderSide(color: PdfColors.black, width: 0.5),

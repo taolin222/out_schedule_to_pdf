@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import '../models/study_plan.dart';
 import '../services/pdf_generator.dart';
-import '../services/persistence_service.dart';
 import '../widgets/date_picker_field.dart';
 import '../widgets/multi_line_text_field.dart';
 import 'preview_screen.dart';
@@ -28,12 +27,10 @@ class _InputScreenState extends State<InputScreen> {
   }
 
   Future<void> _loadSavedData() async {
-    final verbal = await PersistenceService.getLastVerbalItems();
-    final reasoning = await PersistenceService.getLastReasoningItems();
     if (!mounted) return;
     setState(() {
-      _verbalController.text = verbal ?? '逻辑填空\n语句衔接\n片段阅读';
-      _reasoningController.text = reasoning ?? '类比推理\n图推\n定义判断\n逻辑判断';
+      _verbalController.text = '逻辑填空\n片段阅读';
+      _reasoningController.text = '逻辑判断\n图推\n类比推理\n定义判断';
     });
   }
 
@@ -52,8 +49,7 @@ class _InputScreenState extends State<InputScreen> {
     if (!_isFormValid) return;
     setState(() => _isGenerating = true);
 
-    await PersistenceService.saveVerbalItems(_verbalController.text);
-    await PersistenceService.saveReasoningItems(_reasoningController.text);
+
 
     final plan = StudyPlan(
       examDate: _examDate,
