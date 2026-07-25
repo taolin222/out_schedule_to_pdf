@@ -221,7 +221,7 @@ class PdfGenerator {
     for (int i = 0; i < vItems.length; i++) {
       final catTxt = vItems.length > 1 ? _catChar('言语', i) : (i == 0 ? '言语' : '');
       rows.add(_makeRow(_ci8(catTxt, vItems[i]), font,
-          height: rh, mergeCol0: i < vItems.length - 1, leftAlignCol: 1));
+          height: rh, mergeCol1Right: false, mergeCol0: i < vItems.length - 1, leftAlignCol: 1));
     }
   }
 
@@ -229,7 +229,7 @@ class PdfGenerator {
     final rItems = plan.reasoningItemList;
     for (int i = 0; i < rItems.length; i++) {
       rows.add(_makeRow(_ci8(_cat2Line('判断推理', rItems.length, i), rItems[i]), font,
-          height: rh, mergeCol0: i < rItems.length - 1, leftAlignCol: 1));
+          height: rh, mergeCol1Right: false, mergeCol0: i < rItems.length - 1, leftAlignCol: 1));
     }
   }
 
