@@ -244,34 +244,8 @@ class PdfGenerator {
   }
 
   static void _renderPolitics(List<pw.TableRow> rows, StudyPlan plan, pw.Font font, double rh) {
-    rows.add(pw.TableRow(children: [
-      pw.Container(width: double.infinity, height: rh + 6,
-        decoration: const pw.BoxDecoration(border: pw.Border(
-          bottom: pw.BorderSide(color: PdfColors.black, width: 0.5),
-          left: pw.BorderSide(color: PdfColors.black, width: 0.5),
-          right: pw.BorderSide(color: PdfColors.black, width: 0.5),
-        )),
-        alignment: pw.Alignment.center,
-        padding: const pw.EdgeInsets.symmetric(horizontal: 6),
-        child: pw.Text('政治常识', style: pw.TextStyle(font: font, fontSize: 11, fontWeight: pw.FontWeight.bold),
-            textAlign: pw.TextAlign.center)),
-      pw.Container(width: double.infinity, height: rh + 6,
-        decoration: const pw.BoxDecoration(border: pw.Border(
-          bottom: pw.BorderSide(color: PdfColors.black, width: 0.5))),
-        child: pw.SizedBox.shrink()),
-      pw.Container(width: double.infinity, height: rh + 6,
-        decoration: const pw.BoxDecoration(border: pw.Border(
-          bottom: pw.BorderSide(color: PdfColors.black, width: 0.5))),
-        child: pw.SizedBox.shrink()),
-      pw.Container(width: double.infinity, height: rh + 6,
-        decoration: const pw.BoxDecoration(border: pw.Border(
-          bottom: pw.BorderSide(color: PdfColors.black, width: 0.5))),
-        child: pw.SizedBox.shrink()),
-      _borderedCell('', font, height: rh + 6),
-      _borderedCell('', font, height: rh + 6),
-      _borderedCell('', font, height: rh + 6),
-      _borderedCell('', font, height: rh + 6),
-    ]));
+    // 使用统一的 _makeRow，确保边框与其他模块一致
+    rows.add(_makeRow(_c8('政治常识'), font, height: rh + 6, catFontSize: 11));
   }
 
   static void _renderCurrentAffairs(List<pw.TableRow> rows, StudyPlan plan, pw.Font font, double rh) {
