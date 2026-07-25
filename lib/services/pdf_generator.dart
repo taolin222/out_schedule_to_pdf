@@ -254,11 +254,11 @@ class PdfGenerator {
 
   static void _renderShenlun(List<pw.TableRow> rows, StudyPlan plan, pw.Font font, double rh) {
     rows.add(_makeRow(['', '小题', '概括题', '', '', '', '', ''], font,
-        height: rh, mergeCol1Right: false, mergeCol0: true, mergeCol1: true, leftAlignCol: 2));
+        height: rh, mergeCol1Right: false, mergeCol2Right: false, mergeCol0: true, mergeCol1: true, leftAlignCol: 2));
     rows.add(_makeRow(['申论', '', '分析题', '', '', '', '', ''], font,
-        height: rh, mergeCol1Right: false, mergeCol0: true, mergeCol1: true, leftAlignCol: 2));
+        height: rh, mergeCol1Right: false, mergeCol2Right: false, mergeCol0: true, mergeCol1: true, leftAlignCol: 2));
     rows.add(_makeRow(['', '', '贯彻执行', '', '', '', '', ''], font,
-        height: rh, mergeCol1Right: false, mergeCol0: true, leftAlignCol: 2));
+        height: rh, mergeCol1Right: false, mergeCol2Right: false, mergeCol0: true, leftAlignCol: 2));
     rows.add(_makeRow(['', '大作文', '', '', '', '', '', ''], font,
         height: rh, leftAlignCol: 1));
   }
