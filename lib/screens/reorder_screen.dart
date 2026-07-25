@@ -38,10 +38,38 @@ class _ReorderScreenState extends State<ReorderScreen> {
     }
   }
 
+  void _showToast(String message) {
+    final overlay = Overlay.of(context);
+    OverlayEntry? entry;
+    entry = OverlayEntry(
+      builder: (context) => Positioned(
+        top: MediaQuery.of(context).padding.top + 12,
+        right: 12,
+        child: Material(
+          color: Colors.transparent,
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+            decoration: BoxDecoration(
+              color: const Color(0xFF1F2937),
+              borderRadius: BorderRadius.circular(8),
+              boxShadow: const [BoxShadow(color: Colors.black26, blurRadius: 8, offset: Offset(0, 2))],
+            ),
+            child: Text(message, style: const TextStyle(color: Colors.white, fontSize: 13, fontWeight: FontWeight.w500)),
+          ),
+        ),
+      ),
+    );
+    overlay.insert(entry);
+    Future.delayed(const Duration(milliseconds: 1200), () => entry?.remove());
+  }
+
   Future<void> _saveOrder() async {
     setState(() => _saving = true);
     try {
       await PersistenceService.saveModuleOrder(ModuleKeys.toStored(_modules));
+      if (!mounted) return;
+      _showToast('✓ 保存成功');
+      await Future.delayed(const Duration(milliseconds: 500));
       if (!mounted) return;
       Navigator.of(context).pop(true);
     } catch (e) {
@@ -67,79 +95,47 @@ class _ReorderScreenState extends State<ReorderScreen> {
         ),
       ),
       body: _loaded
-          ? Column(
-              children: [
-                Expanded(
-                  child: ReorderableListView.builder(
-                    buildDefaultDragHandles: false,
-                    padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
-                    itemCount: _modules.length,
-                    onReorderItem: (oldIndex, newIndex) {
-                      setState(() {
-                        final item = _modules.removeAt(oldIndex);
-                        _modules.insert(newIndex, item);
-                        _isDirty = true;
-                      });
-                    },
-                    itemBuilder: (context, index) {
-                      return Card(
-                        key: ValueKey(_modules[index]),
-                        margin: const EdgeInsets.only(bottom: 8),
-                        child: ListTile(
-                          leading: ReorderableDragStartListener(
-                            index: index,
-                            child: const Icon(Icons.drag_indicator),
-                          ),
-                          title: Text(_modules[index], style: const TextStyle(fontSize: 16)),
-                          trailing: ReorderableDragStartListener(
-                            index: index,
-                            child: const Icon(Icons.drag_indicator),
-                          ),
-                        ),
-                      );
-                    },
-                  ),
-                ),
-                // 底部保存按钮
-                Container(
-                  width: double.infinity,
-                  padding: const EdgeInsets.fromLTRB(20, 8, 20, 24),
-                  decoration: BoxDecoration(
-                    color: theme.scaffoldBackgroundColor,
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withValues(alpha: 0.05),
-                        blurRadius: 8,
-                        offset: const Offset(0, -2),
-                      ),
-                    ],
-                  ),
-                  child: ElevatedButton(
-                    onPressed: canSave ? _saveOrder : null,
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: canSave ? theme.colorScheme.primary : const Color(0xFFD1D5DB),
-                      foregroundColor: canSave ? Colors.white : const Color(0xFF9CA3AF),
-                      disabledBackgroundColor: const Color(0xFFE5E7EB),
-                      disabledForegroundColor: const Color(0xFF9CA3AF),
-                      elevation: 0,
-                      padding: const EdgeInsets.symmetric(vertical: 14),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
-                      ),
+          ? ReorderableListView.builder(
+              buildDefaultDragHandles: false,
+              padding: const EdgeInsets.all(16),
+              itemCount: _modules.length,
+              onReorderItem: (oldIndex, newIndex) {
+                setState(() {
+                  final item = _modules.removeAt(oldIndex);
+                  _modules.insert(newIndex, item);
+                  _isDirty = true;
+                });
+              },
+              itemBuilder: (context, index) {
+                return Card(
+                  key: ValueKey(_modules[index]),
+                  margin: const EdgeInsets.only(bottom: 8),
+                  child: ListTile(
+                    leading: ReorderableDragStartListener(
+                      index: index,
+                      child: const Icon(Icons.drag_indicator),
                     ),
-                    child: _saving
-                        ? const SizedBox(width: 18, height: 18,
-                            child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
-                        : Text('保存顺序', style: TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.w600,
-                            color: canSave ? Colors.white : const Color(0xFF9CA3AF),
-                          )),
+                    title: Text(_modules[index], style: const TextStyle(fontSize: 16)),
+                    trailing: ReorderableDragStartListener(
+                      index: index,
+                      child: const Icon(Icons.drag_indicator),
+                    ),
                   ),
-                ),
-              ],
+                );
+              },
             )
           : const Center(child: CircularProgressIndicator()),
+      floatingActionButton: FloatingActionButton.extended(
+        onPressed: canSave ? _saveOrder : null,
+        backgroundColor: canSave ? theme.colorScheme.primary : const Color(0xFFD1D5DB),
+        foregroundColor: canSave ? Colors.white : const Color(0xFF9CA3AF),
+        elevation: canSave ? 4 : 0,
+        icon: _saving
+            ? const SizedBox(width: 18, height: 18,
+                child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
+            : const Icon(Icons.save),
+        label: Text(_saving ? '保存中...' : '保存顺序'),
+      ),
     );
   }
 }
