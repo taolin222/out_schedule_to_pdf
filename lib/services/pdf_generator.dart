@@ -22,10 +22,33 @@ class PdfGenerator {
     7: pw.FlexColumnWidth(1.5),
   };
 
+  // 2字一行（例：判断推理→"判断"/"推理"），根据子项目数自动调字体大小
+  static String _cat2Line(String name, int itemCount, int row) {
+    if (name.length == 4) {
+      if (row == 0) return name.substring(0, 2);
+      if (row == 1) return name.substring(2, 4);
+    }
+    return row == 0 ? name : '';
+  }
+
+  static double _catFontSize(int itemCount) => itemCount <= 2 ? 9.0 : _fontSize;
+  // 仅分类名（其余列全空）
+  static List<String> _c8(String cat) => [cat, '', '', '', '', '', '', ''];
+  // 分类名+子项目
+  static List<String> _ci8(String cat, String item) => [
+    cat,
+    item,
+    '',
+    '',
+    '',
+    '',
+    '',
+    '',
+  ];
+
+  // 旧版单字拆分（用于数量/资料分析等）
   static String _catChar(String category, int row) {
     const chars = {
-      '判断推理': ['判', '断', '推', '理'],
-      '言语': ['言', '语'],
       '数量': ['数', '量'],
       '资料分析': ['资料', '分析'],
       '政治常识': ['政治常识'],
@@ -121,6 +144,7 @@ class PdfGenerator {
     bool noRightBorder = false,
     bool noLeftBorder = false,
     bool topBorder = false,
+    double fontSize = _fontSize,
   }) {
     final child = text.isEmpty
         ? pw.SizedBox.shrink()
@@ -128,7 +152,7 @@ class PdfGenerator {
             text,
             style: pw.TextStyle(
               font: font,
-              fontSize: _fontSize,
+              fontSize: fontSize,
               fontWeight: pw.FontWeight.bold,
             ),
             textAlign: pw.TextAlign.left,
@@ -165,9 +189,10 @@ class PdfGenerator {
     bool bottomBorder = true,
     bool mergeCol0 = false,
     bool mergeCol1 = false,
-    bool mergeCol1Right = false,
-    bool mergeCol2Right = false,
+    bool mergeCol1Right = true,
+    bool mergeCol2Right = true,
     int leftAlignCol = -1,
+    double catFontSize = _fontSize,
   }) {
     assert(texts.length == 8);
     final cells = List.generate(8, (i) {
@@ -182,6 +207,7 @@ class PdfGenerator {
         alignLeft: i == leftAlignCol,
         noRightBorder: noRight,
         noLeftBorder: noLeft,
+        fontSize: i == 0 ? catFontSize : _fontSize,
       );
     });
     return pw.TableRow(children: cells);
@@ -235,79 +261,37 @@ class PdfGenerator {
       ),
     );
 
-    // 言语（动态）
-    final vItems = plan.verbalItemList;
-    for (int i = 0; i < vItems.length; i++) {
-      rows.add(
-        _makeRow(
-          [_catChar('言语', i), vItems[i], '', '', '', '', '', ''],
-          font,
-          height: rh,
-          bottomBorder: true,
-          mergeCol0: i < vItems.length - 1,
-          mergeCol1Right: true,
-          leftAlignCol: 1,
-        ),
-      );
+    // 动态模块：言语理解/判断推理（统一逻辑）
+    void addDynamicSection(String name, List<String> items) {
+      final cnt = items.length;
+      for (int i = 0; i < cnt; i++) {
+        rows.add(
+          _makeRow(
+            _ci8(_cat2Line(name, cnt, i), items[i]),
+            font,
+            height: rh,
+            mergeCol0: i < cnt - 1,
+            leftAlignCol: 1,
+            catFontSize: _catFontSize(cnt),
+          ),
+        );
+      }
     }
 
-    // 判断推理（动态）
-    final rItems = plan.reasoningItemList;
-    for (int i = 0; i < rItems.length; i++) {
-      rows.add(
-        _makeRow(
-          [_catChar('判断推理', i), rItems[i], '', '', '', '', '', ''],
-          font,
-          height: rh,
-          bottomBorder: true,
-          mergeCol0: i < rItems.length - 1,
-          mergeCol1Right: true,
-          leftAlignCol: 1,
-        ),
-      );
-    }
+    addDynamicSection('言语理解', plan.verbalItemList);
+    addDynamicSection('判断推理', plan.reasoningItemList);
 
     // 数量（固定2行）
     rows.add(
-      _makeRow(
-        [_catChar('数量', 0), '', '', '', '', '', '', ''],
-        font,
-        height: 26,
-        bottomBorder: true,
-        mergeCol0: true,
-        mergeCol1Right: true, mergeCol2Right: true,
-      ),
+      _makeRow(_c8(_catChar('数量', 0)), font, height: 26, mergeCol0: true),
     );
-    rows.add(
-      _makeRow(
-        [_catChar('数量', 1), '', '', '', '', '', '', ''],
-        font,
-        height: 26,
-        bottomBorder: true,
-        mergeCol1Right: true, mergeCol2Right: true,
-      ),
-    );
+    rows.add(_makeRow(_c8(_catChar('数量', 1)), font, height: 26));
 
     // 资料分析（固定2行）
     rows.add(
-      _makeRow(
-        [_catChar('资料分析', 0), '', '', '', '', '', '', ''],
-        font,
-        height: 26,
-        bottomBorder: true,
-        mergeCol0: true,
-        mergeCol1Right: true, mergeCol2Right: true,
-      ),
+      _makeRow(_c8(_catChar('资料分析', 0)), font, height: 26, mergeCol0: true),
     );
-    rows.add(
-      _makeRow(
-        [_catChar('资料分析', 1), '', '', '', '', '', '', ''],
-        font,
-        height: 26,
-        bottomBorder: true,
-        mergeCol1Right: true, mergeCol2Right: true,
-      ),
-    );
+    rows.add(_makeRow(_c8(_catChar('资料分析', 1)), font, height: 26));
 
     // 政治常识
     rows.add(
@@ -374,16 +358,7 @@ class PdfGenerator {
     );
 
     // 时政
-    rows.add(
-      _makeRow(
-        ['时政', '', '', '', '', '', '', ''],
-        font,
-        height: rh,
-        bottomBorder: true,
-        mergeCol1Right: true,
-        mergeCol2Right: true,
-      ),
-    );
+    rows.add(_makeRow(_c8('时政'), font, height: rh));
 
     // 申论（小题+概括题/分析题/贯彻执行+大作文）
     rows.add(
@@ -391,7 +366,7 @@ class PdfGenerator {
         ['', '小题', '概括题', '', '', '', '', ''],
         font,
         height: rh,
-        bottomBorder: true,
+        mergeCol1Right: false,
         mergeCol0: true,
         mergeCol1: true,
         leftAlignCol: 2,
@@ -402,7 +377,7 @@ class PdfGenerator {
         ['申论', '', '分析题', '', '', '', '', ''],
         font,
         height: rh,
-        bottomBorder: true,
+        mergeCol1Right: false,
         mergeCol0: true,
         mergeCol1: true,
         leftAlignCol: 2,
@@ -413,7 +388,7 @@ class PdfGenerator {
         ['', '', '贯彻执行', '', '', '', '', ''],
         font,
         height: rh,
-        bottomBorder: true,
+        mergeCol1Right: false,
         mergeCol0: true,
         leftAlignCol: 2,
       ),
@@ -423,8 +398,6 @@ class PdfGenerator {
         ['', '大作文', '', '', '', '', '', ''],
         font,
         height: rh,
-        bottomBorder: true,
-        mergeCol2Right: true,
         leftAlignCol: 1,
       ),
     );
@@ -437,7 +410,7 @@ class PdfGenerator {
   static pw.Widget _buildSummary(pw.Font font) {
     return pw.Container(
       width: double.infinity,
-      height: 150,
+      height: 200,
       decoration: const pw.BoxDecoration(
         border: pw.Border(
           top: pw.BorderSide(color: PdfColors.black, width: 0.5),
