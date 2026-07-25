@@ -164,17 +164,17 @@ class PdfGenerator {
       decoration: pw.BoxDecoration(
         border: pw.Border(
           top: topBorder
-              ? const pw.BorderSide(color: PdfColors.black, width: 0.5)
+              ? const pw.BorderSide(color: PdfColors.black, width: 0.8)
               : pw.BorderSide.none,
           bottom: bottomBorder
-              ? const pw.BorderSide(color: PdfColors.black, width: 0.5)
+              ? const pw.BorderSide(color: PdfColors.black, width: 0.8)
               : pw.BorderSide.none,
           left: noLeftBorder
               ? pw.BorderSide.none
-              : const pw.BorderSide(color: PdfColors.black, width: 0.5),
+              : const pw.BorderSide(color: PdfColors.black, width: 0.8),
           right: noRightBorder
               ? pw.BorderSide.none
-              : const pw.BorderSide(color: PdfColors.black, width: 0.5),
+              : const pw.BorderSide(color: PdfColors.black, width: 0.8),
         ),
       ),
       alignment: alignLeft ? pw.Alignment.centerLeft : pw.Alignment.center,

@@ -33,6 +33,7 @@ class PreviewScreen extends StatelessWidget {
         canChangePageFormat: false,
         canChangeOrientation: false,
         canDebug: false,
+        dpi: 300,
       ),
     );
   }
