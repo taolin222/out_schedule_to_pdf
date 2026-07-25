@@ -28,7 +28,7 @@ class PdfGenerator {
       '言语': ['言', '语'],
       '数量': ['数', '量'],
       '资料分析': ['资料', '分析'],
-      '政治理论': ['政治理论'],
+      '政治常识': ['政治常识'],
     };
     final list = chars[category];
     if (list != null && row < list.length) return list[row];
@@ -309,7 +309,7 @@ class PdfGenerator {
       ),
     );
 
-    // 政治理论
+    // 政治常识
     rows.add(
       pw.TableRow(
         children: [
@@ -326,7 +326,7 @@ class PdfGenerator {
             alignment: pw.Alignment.center,
             padding: const pw.EdgeInsets.symmetric(horizontal: 6),
             child: pw.Text(
-              '政治理论',
+              '政治常识',
               style: pw.TextStyle(
                 font: font,
                 fontSize: 11,
@@ -373,10 +373,10 @@ class PdfGenerator {
       ),
     );
 
-    // 常识
+    // 时政
     rows.add(
       _makeRow(
-        ['常识', '', '', '', '', '', '', ''],
+        ['时政', '', '', '', '', '', '', ''],
         font,
         height: rh,
         bottomBorder: true,
